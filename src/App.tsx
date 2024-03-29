@@ -1,47 +1,23 @@
-import { useState } from "react";
-import "./App.css";
-import axios from "axios";
-import Spinner from 'react-bootstrap/Spinner';
-import Skeleton from "react-loading-skeleton";
-import { Oval } from "react-loader-spinner";
+// App.js
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchWeatherData } from './weather/weatherSlice';
+import { Oval } from 'react-loader-spinner';
+import {ThunkDispatch} from "@reduxjs/toolkit";
+import './App.css'; // Importez votre fichier CSS
+const App = () => {
+  const [city, setCity] = useState('Tunis');
+  const dispatch = useDispatch<ThunkDispatch<any, any, any>>();
+  const { data, loading, error } = useSelector((state:any) => state.weather);
 
-interface WeatherData {
-  main: {
-    temp: number;
-    humidity: number;
+  const handleSearch = () => {
+    dispatch(fetchWeatherData(city));
+    setCity('');
   };
-  weather: {
-    description: string;
-  }[];
-  wind: {
-    speed: number;
-  };
-}
-
-function App() {
-  const [city, setCity] = useState("");
-  const [weatherData, setWeatherData] = useState<{
-    loading: boolean;
-    data: WeatherData | null;
-    error: boolean;
-  }>({
-    loading: false,
-    data: null,
-    error: false,
-  });
-
-  const handleSearch = async () => {
-    try {
-      setWeatherData({ ...weatherData, loading: true });
-      const response = await axios.get<WeatherData>(
-        `http://api.openweathermap.org/data/2.5/weather?q=${city}&appid=733ebae1d93a91a5acbac287d1b5fadb&units=metric`
-      );
-      setWeatherData({ loading: false, data: response.data, error: false });
-    } catch (error) {
-      console.error("Error fetching weather data: ", error);
-      setWeatherData({ loading: false, data: null, error: true });
-    }
-  };
+  useEffect(() => {
+    // Chargez les données météorologiques de Tunis lors du montage du composant
+    dispatch(fetchWeatherData(city));
+  }, [dispatch]); // Ne spécifiez pas city comme dépendance pour charger uniquement lors du montage initial
 
   return (
     <div className="weather-card">
@@ -63,7 +39,7 @@ function App() {
           value={city}
           onChange={(e) => setCity(e.target.value)}
           onKeyPress={(e) => {
-            if (e.key === "Enter") {
+            if (e.key === 'Enter') {
               handleSearch();
             }
           }}
@@ -77,36 +53,34 @@ function App() {
           Get Weather
         </button>
       </div>
-      {weatherData.loading ? (
-       /*    <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner> */
+      {loading && (
         <Oval
-        visible={true}
-        height="80"
-        width="80"
-        color="#4fa94d"
-        ariaLabel="oval-loading"
-        wrapperStyle={{}}
-        wrapperClass=""
+          visible={true}
+          height="80"
+          width="80"
+          color="#4fa94d"
+          ariaLabel="oval-loading"
+          wrapperStyle={{}}
+          wrapperClass=""
         />
-      ) : weatherData.error ? (
+      )}
+ {error  && (
         <p>Error fetching weather data</p>
-      ) : weatherData.data ? (
+      )}   {data && !error && (
         <div id="weatherInfo">
           <div className="weather-icon text-center">
             <i className="bi bi-cloud-sun"></i>
           </div>
           <div className="weather-info text-center">
-            <p>Temperature: {weatherData.data.main.temp}°C</p>
-            <p>Weather: {weatherData.data.weather[0].description}</p>
-            <p>Humidity: {weatherData.data.main.humidity}%</p>
-            <p>Wind Speed: {weatherData.data.wind.speed} m/s</p>
+            <p>Temperature: {data.main.temp}°C</p>
+            <p>Weather: {data.weather[0].description}</p>
+            <p>Humidity: {data.main.humidity}%</p>
+            <p>Wind Speed: {data.wind.speed} m/s</p>
           </div>
         </div>
-      ) : null}
+      )}
     </div>
   );
-}
+};
 
 export default App;
