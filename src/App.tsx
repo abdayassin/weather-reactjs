@@ -1,5 +1,5 @@
 // App.js
-import React, { useEffect, useState } from 'react';
+import   { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchWeatherData } from './weather/weatherSlice';
 import { Oval } from 'react-loader-spinner';
